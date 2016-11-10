@@ -38,11 +38,12 @@ get_header(); ?>
 				 */
 				get_template_part( 'template-parts/content', get_post_format() );
 
-			endwhile;
+			endwhile; ?>
 
-			the_posts_navigation();
+			<!-- < Button to load more posts > -->
+			<button class="btn" id="load_more_posts" data-page="1"><?= __( 'More', 'dart-theme' ); ?></button>
 
-		else :
+		<?php else :
 
 			get_template_part( 'template-parts/content', 'none' );
 

@@ -111,6 +111,23 @@ function dart_theme_scripts() {
 	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 		wp_enqueue_script( 'comment-reply' );
 	}
+
+	/*
+	 * Load jQuery and script for loading more posts
+	 * Only in the front page
+	 */
+	if ( is_front_page() ) {
+		wp_enqueue_script( 'jquery' );
+
+		wp_enqueue_script( 'custom-js', get_template_directory_uri() . '/js/custom.js', array( 'jquery' ), false, true );
+
+		wp_localize_script( 'custom-js', 'custom_js',
+			array(
+				'url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'custom_js_nonce' )
+			)
+		);
+	}
 }
 add_action( 'wp_enqueue_scripts', 'dart_theme_scripts' );
 
@@ -138,3 +155,36 @@ require get_template_directory() . '/inc/customizer.php';
  * Load Jetpack compatibility file.
  */
 require get_template_directory() . '/inc/jetpack.php';
+
+
+function load_more_posts() {
+	$nonce = $_POST['nonce'];
+
+	if ( ! wp_verify_nonce( $nonce, 'custom_js_nonce' ) )
+		die ( 'Error nonce!' );
+
+	$page = intval( $_POST['page'] ) + 1;
+	//$per_page =
+
+	$args = array(
+		'paged' => $page
+	);
+
+	$the_query = new WP_Query( $args );
+
+	if( $the_query->have_posts() ) :
+		while( $the_query->have_posts() ) :
+			$the_query->the_post();
+			get_template_part( 'template-parts/content', get_post_format( $the_query->post ) );
+		endwhile;
+	else :
+		echo "lpage";
+	endif;
+
+	wp_reset_query();
+
+	exit;
+}
+
+add_action('wp_ajax_load_more_posts', 'load_more_posts');
+add_action('wp_ajax_nopriv_load_more_posts', 'load_more_posts');
