@@ -64,6 +64,13 @@ function dart_theme_setup() {
 		'default-color' => 'ffffff',
 		'default-image' => '',
 	) ) );
+
+	// Set uo custom logo
+	add_theme_support( 'custom-logo', array(
+		'height' => 65,
+		'width' => 172,
+		'flex-height' => true,
+	) );
 }
 endif;
 add_action( 'after_setup_theme', 'dart_theme_setup' );
@@ -156,18 +163,15 @@ require get_template_directory() . '/inc/customizer.php';
  */
 require get_template_directory() . '/inc/jetpack.php';
 
-
+/*
+ * Function, which returns HTML of posts by AJAX
+ */
 function load_more_posts() {
-	$nonce = $_POST['nonce'];
-
-	if ( ! wp_verify_nonce( $nonce, 'custom_js_nonce' ) )
+	if ( ! wp_verify_nonce( $nonce = $_POST['nonce'], 'custom_js_nonce' ) )
 		die ( 'Error nonce!' );
 
-	$page = intval( $_POST['page'] ) + 1;
-	//$per_page =
-
 	$args = array(
-		'paged' => $page
+		'paged' => intval( $_POST['page'] ) + 1
 	);
 
 	$the_query = new WP_Query( $args );
@@ -188,3 +192,69 @@ function load_more_posts() {
 
 add_action('wp_ajax_load_more_posts', 'load_more_posts');
 add_action('wp_ajax_nopriv_load_more_posts', 'load_more_posts');
+
+/*
+ * Customize links and headers in site
+ */
+function dart_theme_customizer_init( $wp_customize ) {
+
+	// Links color
+	$wp_customize->add_setting(
+		'all_links_color',
+		array(
+			'default'  => '#4169e1',
+			'transport' => 'postMessage'
+		)
+	);
+	$wp_customize->add_control(
+		new WP_Customize_Color_Control(
+			$wp_customize,
+			'all_links_color',
+			array(
+				'label' => __( 'Links color', 'dart-theme' ),
+				'section' => 'colors',
+				'settings' => 'all_links_color'
+			)
+		)
+	);
+
+	// H2 color
+	$wp_customize->add_setting(
+		'headers_h2_color',
+		array(
+			'default' => '#404040',
+			'transport' => 'postMessage'
+		)
+	);
+	$wp_customize->add_control(
+		new WP_Customize_Color_Control(
+			$wp_customize,
+			'headers_h2_color',
+			array(
+				'label' => __( 'H2 color', 'dart-theme' ),
+				'section' => 'colors',
+				'settings' => 'headers_h2_color'
+			)
+		)
+	);
+}
+add_action( 'customize_register', 'dart_theme_customizer_init' );
+
+/*
+ * Custom CSS
+ */
+function dart_theme_customizer_css() {
+	echo '<style>';
+	echo 'a { color: ' . get_theme_mod( 'all_links_color' ) . '; }';
+	echo 'h2 { color: ' . get_theme_mod( 'headers_h2_color' ) . '; }';
+	echo '</style>';
+}
+add_action( 'wp_head', 'dart_theme_customizer_css' );
+
+/*
+ * Customizer Live preview
+ */
+function dart_theme_customizer_live() {
+	wp_enqueue_script( 'dart-theme-customizer', get_stylesheet_directory_uri() . '/js/theme-customizer.js', array( 'jquery', 'customize-preview' ), false, true );
+}
+add_action( 'customize_preview_init', 'dart_theme_customizer_live' );
