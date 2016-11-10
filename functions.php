@@ -258,3 +258,21 @@ function dart_theme_customizer_live() {
 	wp_enqueue_script( 'dart-theme-customizer', get_stylesheet_directory_uri() . '/js/theme-customizer.js', array( 'jquery', 'customize-preview' ), false, true );
 }
 add_action( 'customize_preview_init', 'dart_theme_customizer_live' );
+
+/*
+ * Add meta boxes
+ */
+function dart_theme_add_meta_boxes() {
+	require_once( get_stylesheet_directory() . "/inc/meta-boxes/meta-box-rate.class.php" );
+	Meta_Box_Rate::add_box();
+}
+add_action( 'add_meta_boxes', 'dart_theme_add_meta_boxes' );
+
+/*
+ * Save meta boxes
+ */
+function dart_theme_save_meta_boxes( $postID ) {
+	require_once( get_stylesheet_directory() . "/inc/meta-boxes/meta-box-rate.class.php" );
+	Meta_Box_Rate::save( $postID );
+}
+add_action( 'save_post', 'dart_theme_save_meta_boxes' );
